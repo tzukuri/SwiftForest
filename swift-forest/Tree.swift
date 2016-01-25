@@ -7,7 +7,7 @@ import Foundation
 class Forest {
     var trees = [Tree]()
     
-    init(size: Int, numFeatures: Int? = nil, minExamples: Int = 1, randomSeed: Int = 1) {
+    init(size: Int = 100, numFeatures: Int? = nil, minExamples: Int = 2, randomSeed: Int = 1) {
         for _ in 0..<size {
             self.trees.append(
                 Tree(numFeatures: numFeatures, minExamples: minExamples, randomSeed: randomSeed)
@@ -48,7 +48,7 @@ class Tree {
     let randomSeed: Int
     var root: Node
     
-    init(numFeatures: Int? = nil, minExamples: Int = 1, randomSeed: Int = 1) {
+    init(numFeatures: Int? = nil, minExamples: Int = 2, randomSeed: Int = 1) {
         self.numFeatures = numFeatures
         self.minExamples = minExamples
         self.randomSeed = randomSeed
