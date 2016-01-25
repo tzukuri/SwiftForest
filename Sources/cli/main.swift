@@ -1,16 +1,34 @@
 import Foundation
 import SwiftForest
+import SwiftCLI
 
-let ts = TrainingSet(features: ["a", "b"], outputs: ["f", "t"])
-ts.addExample([0, 0], output: 0)
-ts.addExample([0, 1], output: 1)
-ts.addExample([1, 0], output: 1)
-ts.addExample([1, 1], output: 0)
+func trainModel(path: String) {
+    print("Reading training file...")
+    let ts = TrainingSet(features: ["a", "b"], outputs: ["f", "t"])
+    // ts.addExample([0, 0], output: 0)
+    // ...
 
-let f = Forest(size: 100)
-f.train(ts)
+    print("Training forest...")
+    let start = clock()
+    let f = Forest()
+    f.train(ts)
 
-print(f.classify([0, 0]))
-print(f.classify([0, 1]))
-print(f.classify([1, 0]))
-print(f.classify([1, 1]))
+    let duration = Double(clock() - start)
+    print("Finished, training took \(duration / Double(CLOCKS_PER_SEC))")
+}
+
+CLI.setup(
+    name: "SwiftForest",
+    version: "1.0",
+    description: "Swift Forest - random forest decision tree"
+)
+
+CLI.registerChainableCommand(commandName: "train")
+    .withShortDescription("Trains a new forest on an input training file")
+    .withSignature("<training_file>")
+    .withExecutionBlock { (arguments) in
+        trainModel(arguments.requiredArgument("training_file"))
+    }
+
+CLI.go()
+

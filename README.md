@@ -17,6 +17,21 @@ be constructed, and there are only 3 parameters:
 * minimum number of examples a node must have if it's to split (defaults to 2)
 * number of features to randomly select during a split (defaults to sqrt(|features|))
 
+## Building
+
+Swift Forest uses the Swift package manager build system. Download a version of Swift that
+includes the build system (2.2+) and run:
+
+```shell
+$ swift build
+```
+
+The command line interface is then available for testing:
+
+```shell
+$ ./.build/debug/cli <training_file>
+```
+
 ## Licence
 
 ![Public Domain](http://i.creativecommons.org/p/zero/1.0/88x31.png)
