@@ -4,10 +4,10 @@ import Foundation
 // Extremely randomized trees
 // http://www.montefiore.ulg.ac.be/%7Eernst/uploads/news/id63/extremely-randomized-trees.pdf
 
-class Forest {
+public class Forest {
     var trees = [Tree]()
     
-    init(size: Int = 100, numFeatures: Int? = nil, minExamples: Int = 2, randomSeed: Int = 1) {
+    public init(size: Int = 100, numFeatures: Int? = nil, minExamples: Int = 2, randomSeed: Int = 1) {
         for _ in 0..<size {
             self.trees.append(
                 Tree(numFeatures: numFeatures, minExamples: minExamples, randomSeed: randomSeed)
@@ -15,16 +15,16 @@ class Forest {
         }
     }
     
-    func train(trainingSet: TrainingSet) {
+    public func train(trainingSet: TrainingSet) {
         for tree in trees {
             tree.train(trainingSet)
         }
     }
     
-    func classify(values: [Double]) -> Int {
+    public func classify(values: [Double]) -> Int {
         var counts = [Int: Int]()
         
-        // classify example in each tree and count number of times
+        // classify values in each tree and count number of times
         // each output class is selected
         for tree in trees {
             let output = tree.classify(values)
@@ -41,7 +41,7 @@ class Forest {
     }
 }
 
-class Tree {
+public class Tree {
     var trainingSet: TrainingSet!
     var numFeatures: Int!
     let minExamples: Int
@@ -68,6 +68,7 @@ class Tree {
     func classify(values: [Double]) -> Int {
         var node: Node = root
         
+        // walk the tree until we reach a leaf
         while !node.leaf {
             guard let index = node.splitIndex, value = node.splitValue else { fatalError() }
             if values[index] < value {

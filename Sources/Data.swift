@@ -10,17 +10,17 @@ class Example {
     }
 }
 
-class TrainingSet {
+public class TrainingSet {
     var examples = [Example]()
     var features: [String]
     var outputs: [String]
     
-    init(features: [String], outputs: [String]) {
+    public init(features: [String], outputs: [String]) {
         self.features = features
         self.outputs = outputs
     }
     
-    func addExample(values: [Double], output: UInt) {
+    public func addExample(values: [Double], output: UInt) {
         assert(values.count == features.count)
         assert(Int(output) < outputs.count)
         examples.append(Example(values: values, output: output))
