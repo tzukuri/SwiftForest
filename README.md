@@ -21,7 +21,7 @@ be constructed, and there are only 3 parameters:
 
 ![Public Domain](http://i.creativecommons.org/p/zero/1.0/88x31.png)
 
-Public Domain: To the extent possible under law, Tzukuri Pty Ltd has waived all copyright and related or neighbouring rights to swift-forest. This work is published from: Australia.
+Public Domain: To the extent possible under law, Tzukuri Pty Ltd has waived all copyright and related or neighbouring rights to SwiftForest. This work is published from: Australia.
 
 https://creativecommons.org/publicdomain/zero/1.0/
 
