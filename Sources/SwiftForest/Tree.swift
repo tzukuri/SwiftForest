@@ -4,8 +4,8 @@ import Foundation
 // Extremely randomized trees
 // http://www.montefiore.ulg.ac.be/%7Eernst/uploads/news/id63/extremely-randomized-trees.pdf
 
-public class Forest {
-    var trees = [Tree]()
+final public class Forest {
+    public var trees = [Tree]()
     
     public init(size: Int = 100, numFeatures: Int? = nil, minExamples: Int = 2, randomSeed: Int = 1) {
         for _ in 0..<size {
@@ -41,21 +41,21 @@ public class Forest {
     }
 }
 
-public class Tree {
-    var trainingSet: TrainingSet!
-    var numFeatures: Int!
-    let minExamples: Int
-    let randomSeed: Int
-    var root: Node
+final public class Tree {
+    public var trainingSet: TrainingSet!
+    public var numFeatures: Int!
+    public let minExamples: Int
+    public let randomSeed: Int
+    public var root: Node
     
-    init(numFeatures: Int? = nil, minExamples: Int = 2, randomSeed: Int = 1) {
+    public init(numFeatures: Int? = nil, minExamples: Int = 2, randomSeed: Int = 1) {
         self.numFeatures = numFeatures
         self.minExamples = minExamples
         self.randomSeed = randomSeed
         self.root = Node()
     }
     
-    func train(trainingSet: TrainingSet) {
+    public func train(trainingSet: TrainingSet) {
         self.trainingSet = trainingSet
         if self.numFeatures == nil {
             self.numFeatures = Int(sqrt(Double(trainingSet.features.count)))
@@ -65,7 +65,7 @@ public class Tree {
         root.split(allExamples, tree: self)
     }
     
-    func classify(values: [Double]) -> Int {
+    public func classify(values: [Double]) -> Int {
         var node: Node = root
         
         // walk the tree until we reach a leaf
@@ -83,7 +83,7 @@ public class Tree {
     }
 }
 
-class Split {
+final internal class Split {
     let index: Int
     let value: Double
     var score = 0.0
@@ -112,19 +112,19 @@ class Split {
     }
 }
 
-class Node {
-    var splitIndex: Int? = nil          // feature index
-    var splitValue: Double? = nil       // split point
-    var probabilities: [Double]? = nil  // probability of each output class
-    var outputIndex: Int?               // index of the highest probability output
-    var left: Node?  = nil              // < split
-    var right: Node? = nil              // >= split
+final public class Node {
+    public var splitIndex: Int? = nil          // feature index
+    public var splitValue: Double? = nil       // split point
+    public var probabilities: [Double]? = nil  // probability of each output class
+    public var outputIndex: Int?               // index of the highest probability output
+    public var left: Node?  = nil              // < split
+    public var right: Node? = nil              // >= split
     
-    var leaf: Bool {
+    public var leaf: Bool {
         return left == nil && right == nil
     }
     
-    func split(subset: SubSet, tree: Tree) {
+    public func split(subset: SubSet, tree: Tree) {
         if shouldProduceLeaf(subset, tree: tree) {
             calculateOutputProbabilities(subset, tree: tree)
         } else {

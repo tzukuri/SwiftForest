@@ -29,7 +29,7 @@ $ swift build
 The command line interface is then available for testing:
 
 ```shell
-$ ./.build/debug/cli <training_file>
+$ ./.build/debug/cli help
 ```
 
 ## Licence

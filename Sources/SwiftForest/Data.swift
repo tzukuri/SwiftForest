@@ -1,19 +1,19 @@
 import Foundation
 
-class Example {
-    var values: [Double]
-    var output: UInt
+final public class Example {
+    public var values: [Double]
+    public var output: UInt
     
-    init(values: [Double], output: UInt) {
+    public init(values: [Double], output: UInt) {
         self.values = values
         self.output = output
     }
 }
 
-public class TrainingSet {
-    var examples = [Example]()
-    var features: [String]
-    var outputs: [String]
+final public class TrainingSet {
+    public var examples = [Example]()
+    public var features: [String]
+    public var outputs: [String]
     
     public init(features: [String], outputs: [String]) {
         self.features = features
@@ -27,32 +27,32 @@ public class TrainingSet {
     }
 }
 
-class SubSet {
-    var examples: [Example]
+final public class SubSet {
+    public var examples: [Example]
     
-    init(examples: [Example]) {
+    public init(examples: [Example]) {
         self.examples = examples
     }
     
-    init() {
+    public init() {
         self.examples = []
     }
     
-    var count: Int {
+    public var count: Int {
         return examples.count
     }
     
-    var allEqualOutputs: Bool {
+    public var allEqualOutputs: Bool {
         guard let output = examples.first?.output else { return true }
         return !examples.dropFirst().contains { $0.output != output }
     }
     
-    var allEqualValues: Bool {
+    public var allEqualValues: Bool {
         guard let values = examples.first?.values else { return true }
         return !examples.dropFirst().contains { $0.values != values }
     }
     
-    func featureRanges() -> [(min: Double, max: Double)] {
+    public func featureRanges() -> [(min: Double, max: Double)] {
         var ranges = [(min: Double, max: Double)]()
         for value in examples.first!.values {
             ranges.append((min: value, max: value))
@@ -68,7 +68,7 @@ class SubSet {
         return ranges
     }
     
-    func outputCounts() -> [UInt: Int] {
+    public func outputCounts() -> [UInt: Int] {
         var counts = [UInt: Int]()
         for example in examples {
             counts[example.output] = (counts[example.output] ?? 0) + 1
@@ -77,7 +77,7 @@ class SubSet {
         return counts
     }
     
-    func entropy() -> Double {
+    public func entropy() -> Double {
         let totalCount = Double(examples.count)
         var totalEntropy = 0.0
         

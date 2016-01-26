@@ -4,9 +4,7 @@ import SwiftCLI
 
 func trainModel(path: String) {
     print("Reading training file...")
-    let ts = TrainingSet(features: ["a", "b"], outputs: ["f", "t"])
-    // ts.addExample([0, 0], output: 0)
-    // ...
+    let ts = CSV.read(path)
 
     print("Training forest...")
     let start = clock()
