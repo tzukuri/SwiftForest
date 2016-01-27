@@ -17,7 +17,7 @@ let package = Package(
 
     dependencies: [
         .Package(
-            url: "https://github.com/jakeheis/SwiftCLI",
+            url: "https://github.com/willcannings/SwiftCLI.git",
             majorVersion: 1
         ),
         .Package(
