@@ -100,13 +100,13 @@ class TestCommand: OptionCommandType {
 
         // train and score folds
         print("Testing \(testingFolds) folds on \(trainingSet.examples.count) examples")
-        let start = clock()
+        let start = NSDate()
         let accuracy = folds.score(classifier, maxFolds: testingFolds)
 
         // print total testing duration and average fold accuracy
-        let duration = Double(clock() - start)
+        let duration = start.timeIntervalSinceNow * -1
         let tree = classifier.trees[0]
-        print("\nFinished, training took \(duration / Double(CLOCKS_PER_SEC))")
+        print("\nFinished, training took \(duration)")
         print("Tree depth: \(tree.maxDepth), leaves: \(tree.numLeaves)")
         print("Model accuracy: \(accuracy)")
     }

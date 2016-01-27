@@ -36,10 +36,19 @@ final public class Forest: Classifier {
         delegate?.trainingWillStartWithSteps(trees.count)
         srand48(randomSeed)
 
+        // set the random seed for each tree before looping so the
+        // call to lrand48 doesn't happen at different times when
+        // using multiple threads
         for tree in trees {
             tree.randomSeed = lrand48()
+        }
+
+        // use GCD to parallelise tree training
+        let queue = dispatch_queue_create("com.tzu.dt.trees", DISPATCH_QUEUE_CONCURRENT)
+        dispatch_apply(trees.count, queue) { index in
+            let tree = self.trees[index]
             tree.train(trainingSet)
-            delegate?.trainingDidCompleteStep()
+            self.delegate?.trainingDidCompleteStep()
         }
 
         delegate?.trainingDidFinish()
