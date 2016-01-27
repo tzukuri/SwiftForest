@@ -19,20 +19,25 @@ public protocol ClassifierDelegate {
 final public class Forest: Classifier {
     public var trees = [Tree]()
     public var delegate: ClassifierDelegate?
+    public var randomSeed: Int
     
     public init(size: Int = 100, numFeatures: Int? = nil, minExamples: Int = 2, randomSeed: Int = 1, delegate: ClassifierDelegate? = nil) {
+        self.randomSeed = randomSeed
         self.delegate = delegate
+
         for _ in 0..<size {
             self.trees.append(
-                Tree(numFeatures: numFeatures, minExamples: minExamples, randomSeed: randomSeed)
+                Tree(numFeatures: numFeatures, minExamples: minExamples)
             )
         }
     }
     
     public func train(trainingSet: TrainingSet) {
         delegate?.trainingWillStartWithSteps(trees.count)
+        srand48(randomSeed)
 
         for tree in trees {
+            tree.randomSeed = lrand48()
             tree.train(trainingSet)
             delegate?.trainingDidCompleteStep()
         }
@@ -64,8 +69,8 @@ final public class Tree: Classifier {
     public var delegate: ClassifierDelegate?
     public var trainingSet: TrainingSet!
     public var numFeatures: Int!
-    public let minExamples: Int
-    public let randomSeed: Int
+    public var minExamples: Int
+    public var randomSeed: Int
     public var root: Node!
     
     public init(numFeatures: Int? = nil, minExamples: Int = 2, randomSeed: Int = 1) {
@@ -203,7 +208,7 @@ final public class Node {
         
         // randomly select features to score
         for _ in 0..<(ranges.count - tree.numFeatures) {
-            let index = Int(arc4random_uniform(UInt32(indexes.count)))
+            let index = lrand48() % indexes.count
             indexes.removeAtIndex(index)
             ranges.removeAtIndex(index)
         }

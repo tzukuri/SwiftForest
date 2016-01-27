@@ -38,13 +38,13 @@ class TestCommand: OptionCommandType {
     var randomSeed = 1
 
     func setupOptions(options: Options) {
-        options.onKeys(["-f", "--training-folds"], usage: "Number of training folds to generate (default: 10)", valueSignature: "folds") {(key, value) in
+        options.onKeys(["-f", "--training-folds"], usage: "Number of training folds to generate (default: 10)", valueSignature: "training_folds") {(key, value) in
             if let folds = Int(value) {
                 self.trainingFolds = folds
             }
         }
 
-        options.onKeys(["-t", "--testing-folds"], usage: "Number of folds to test (default: 10)", valueSignature: "folds") {(key, value) in
+        options.onKeys(["-t", "--testing-folds"], usage: "Number of folds to test (default: 10)", valueSignature: "testing_folds") {(key, value) in
             if let folds = Int(value) {
                 self.testingFolds = folds
             }
