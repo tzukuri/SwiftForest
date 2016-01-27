@@ -2,9 +2,9 @@ import Foundation
 
 final public class Example {
     public var values: [Double]
-    public var output: UInt
+    public var output: Int
     
-    public init(values: [Double], output: UInt) {
+    public init(values: [Double], output: Int) {
         self.values = values
         self.output = output
     }
@@ -20,10 +20,17 @@ final public class TrainingSet {
         self.outputs = outputs
     }
     
-    public func addExample(values: [Double], output: UInt) {
+    public func addExample(values: [Double], output: Int) {
         assert(values.count == features.count)
-        assert(Int(output) < outputs.count)
+        assert(output < outputs.count)
+        assert(output >= 0)
         examples.append(Example(values: values, output: output))
+    }
+
+    public func cloneWithExamples(examples: [Example]) -> TrainingSet {
+        let trainingSet = TrainingSet(features: features, outputs: outputs)
+        trainingSet.examples = examples
+        return trainingSet
     }
 }
 
@@ -68,8 +75,8 @@ final public class SubSet {
         return ranges
     }
     
-    public func outputCounts() -> [UInt: Int] {
-        var counts = [UInt: Int]()
+    public func outputCounts() -> [Int: Int] {
+        var counts = [Int: Int]()
         for example in examples {
             counts[example.output] = (counts[example.output] ?? 0) + 1
         }

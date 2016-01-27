@@ -40,7 +40,7 @@ internal class CSV {
 
         for line in lines {
             var parts = line.componentsSeparatedByString(",")
-            let output = UInt(parts.removeLast())!
+            let output = Int(parts.removeLast())!
             let values = parts.map { Double($0)! }
             ts.addExample(values, output: output)
         }

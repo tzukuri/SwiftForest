@@ -4,10 +4,24 @@ import Foundation
 // Extremely randomized trees
 // http://www.montefiore.ulg.ac.be/%7Eernst/uploads/news/id63/extremely-randomized-trees.pdf
 
-final public class Forest {
+public protocol Classifier {
+    func train(trainingSet: TrainingSet)
+    func classify(values: [Double]) -> Int
+    var delegate: ClassifierDelegate? { get set }
+}
+
+public protocol ClassifierDelegate {
+    mutating func trainingWillStartWithSteps(count: Int)
+    mutating func trainingDidCompleteStep()
+    mutating func trainingDidFinish()
+}
+
+final public class Forest: Classifier {
     public var trees = [Tree]()
+    public var delegate: ClassifierDelegate?
     
-    public init(size: Int = 100, numFeatures: Int? = nil, minExamples: Int = 2, randomSeed: Int = 1) {
+    public init(size: Int = 100, numFeatures: Int? = nil, minExamples: Int = 2, randomSeed: Int = 1, delegate: ClassifierDelegate? = nil) {
+        self.delegate = delegate
         for _ in 0..<size {
             self.trees.append(
                 Tree(numFeatures: numFeatures, minExamples: minExamples, randomSeed: randomSeed)
@@ -16,9 +30,14 @@ final public class Forest {
     }
     
     public func train(trainingSet: TrainingSet) {
+        delegate?.trainingWillStartWithSteps(trees.count)
+
         for tree in trees {
             tree.train(trainingSet)
+            delegate?.trainingDidCompleteStep()
         }
+
+        delegate?.trainingDidFinish()
     }
     
     public func classify(values: [Double]) -> Int {
@@ -41,28 +60,37 @@ final public class Forest {
     }
 }
 
-final public class Tree {
+final public class Tree: Classifier {
+    public var delegate: ClassifierDelegate?
     public var trainingSet: TrainingSet!
     public var numFeatures: Int!
     public let minExamples: Int
     public let randomSeed: Int
-    public var root: Node
+    public var root: Node!
     
     public init(numFeatures: Int? = nil, minExamples: Int = 2, randomSeed: Int = 1) {
         self.numFeatures = numFeatures
         self.minExamples = minExamples
         self.randomSeed = randomSeed
-        self.root = Node()
     }
     
     public func train(trainingSet: TrainingSet) {
+        delegate?.trainingWillStartWithSteps(1)
         self.trainingSet = trainingSet
-        if self.numFeatures == nil {
-            self.numFeatures = Int(sqrt(Double(trainingSet.features.count)))
-        }
-        
         let allExamples = SubSet(examples: trainingSet.examples)
+
+        // default numFeatures to sqrt(|features|)
+        if numFeatures == nil {
+            numFeatures = Int(sqrt(Double(trainingSet.features.count)))
+        }
+
+        // reset the root node on train so the tree can be re-used
+        root = Node()
         root.split(allExamples, tree: self)
+
+        // there's only a single tree to build, so progress is 0.0 -> 1.0
+        delegate?.trainingDidCompleteStep()
+        delegate?.trainingDidFinish()
     }
     
     public func classify(values: [Double]) -> Int {
