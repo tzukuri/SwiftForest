@@ -65,18 +65,25 @@ final public class Forest: Classifier {
     }
 }
 
-final public class Tree: Classifier {
+final public class Tree: Classifier, CustomStringConvertible {
     public var delegate: ClassifierDelegate?
     public var trainingSet: TrainingSet!
     public var numFeatures: Int!
     public var minExamples: Int
     public var randomSeed: Int
     public var root: Node!
+
+    public var numLeaves = 0
+    public var maxDepth = 0
     
     public init(numFeatures: Int? = nil, minExamples: Int = 2, randomSeed: Int = 1) {
         self.numFeatures = numFeatures
         self.minExamples = minExamples
         self.randomSeed = randomSeed
+    }
+
+    public var description: String {
+        return root.description
     }
     
     public func train(trainingSet: TrainingSet) {
@@ -91,7 +98,7 @@ final public class Tree: Classifier {
 
         // reset the root node on train so the tree can be re-used
         root = Node()
-        root.split(allExamples, tree: self)
+        root.split(allExamples, tree: self, depth: 0)
 
         // there's only a single tree to build, so progress is 0.0 -> 1.0
         delegate?.trainingDidCompleteStep()
@@ -147,33 +154,92 @@ final internal class Split {
     }
 }
 
-final public class Node {
+final public class Node: CustomStringConvertible {
     public var splitIndex: Int? = nil          // feature index
     public var splitValue: Double? = nil       // split point
+
+    // leaf
     public var probabilities: [Double]? = nil  // probability of each output class
     public var outputIndex: Int?               // index of the highest probability output
+
+    // node
     public var left: Node?  = nil              // < split
     public var right: Node? = nil              // >= split
+
+    // training data
+    public var subset: SubSet?
+    public var tree: Tree?
+    public var depth: Int?
     
     public var leaf: Bool {
         return left == nil && right == nil
     }
-    
-    public func split(subset: SubSet, tree: Tree) {
-        if shouldProduceLeaf(subset, tree: tree) {
-            calculateOutputProbabilities(subset, tree: tree)
+
+    public var description: String {
+        guard let left = self.left,
+                  right = self.right,
+                  tree = self.tree else { fatalError() }
+
+        // weka style description
+        var linePrefix = ""
+        var description = ""
+
+        for _ in 0..<depth! {
+            linePrefix += "|   "
+        }
+
+        linePrefix += tree.trainingSet.features[splitIndex!]
+
+
+        // left
+        let leftPrefix = "\(linePrefix) < \(splitValue!)"
+        if left.leaf {
+            guard let index = left.outputIndex else { fatalError() }
+            let output = tree.trainingSet.outputs[index]
+            description += "\(leftPrefix) : \(output)\n"
         } else {
-            randomlySplit(subset, tree: tree)
+            description += leftPrefix + "\n"
+            description += left.description
+        }
+
+        // right
+        let rightPrefix = "\(linePrefix) >= \(splitValue!)"
+        if right.leaf {
+            guard let index = right.outputIndex else { fatalError() }
+            let output = tree.trainingSet.outputs[index]
+            description += "\(rightPrefix) : \(output)\n"
+        } else {
+            description += rightPrefix + "\n"
+            description += right.description
+        }
+
+        return description
+    }
+    
+    public func split(subset: SubSet, tree: Tree, depth: Int) {
+        self.subset = subset
+        self.tree = tree
+        self.depth = depth
+
+        if shouldProduceLeaf() {
+            calculateOutputProbabilities()
+        } else {
+            randomlySplit()
         }
     }
     
-    func shouldProduceLeaf(subset: SubSet, tree: Tree) -> Bool {
+    func shouldProduceLeaf() -> Bool {
+        guard let subset = self.subset, tree = self.tree else { fatalError() }
         return  subset.count < tree.minExamples ||
                 subset.allEqualOutputs ||
                 subset.allEqualValues
     }
     
-    func calculateOutputProbabilities(subset: SubSet, tree: Tree) {
+    func calculateOutputProbabilities() {
+        guard let subset = self.subset,
+                  tree = self.tree,
+                  depth = self.depth else { fatalError() }
+
         let examples = subset.examples
         let examplesCount = Double(examples.count)
         let outputs = tree.trainingSet.outputs.count
@@ -200,9 +266,17 @@ final public class Node {
         
         self.probabilities = probabilities
         self.outputIndex = index
+
+        // depth and breadth tracking
+        tree.maxDepth = max(tree.maxDepth, depth)
+        tree.numLeaves += 1
     }
     
-    func randomlySplit(subset: SubSet, tree: Tree) {
+    func randomlySplit() {
+        guard let subset = self.subset,
+                  tree = self.tree,
+                  depth = self.depth else { fatalError() }
+
         var ranges = subset.featureRanges()
         var indexes = [Int](0..<ranges.count)
         
@@ -243,7 +317,7 @@ final public class Node {
         right = Node()
         
         // recursively continue constructing the tree
-        left!.split(maxSplit.left, tree: tree)
-        right!.split(maxSplit.right, tree: tree)
+        left!.split(maxSplit.left, tree: tree, depth: depth + 1)
+        right!.split(maxSplit.right, tree: tree, depth: depth + 1)
     }
 }

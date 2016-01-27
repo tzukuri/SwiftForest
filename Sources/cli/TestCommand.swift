@@ -81,14 +81,14 @@ class TestCommand: OptionCommandType {
             arguments.requiredArgument("training_file")
         )
 
-        print("Creating \(trainingFolds) folds...")
+        print("Creating \(trainingFolds) training folds...")
         let folds = CrossFoldValidation(
             trainingSet: trainingSet,
             folds: trainingFolds,
             delegate: CrossFoldProgress()
         )
 
-        print("Forest of \(forestSize) trees per fold")
+        print("\nForest of \(forestSize) trees per fold")
         let classifier = Forest(
             size: forestSize,
             numFeatures: numFeatures,
@@ -98,13 +98,15 @@ class TestCommand: OptionCommandType {
         )
 
         // train and score folds
-        print("Training and testing \(testingFolds) folds")
+        print("Testing \(testingFolds) folds on \(trainingSet.examples.count) examples")
         let start = clock()
         let accuracy = folds.score(classifier, maxFolds: testingFolds)
 
         // print total testing duration and average fold accuracy
         let duration = Double(clock() - start)
+        let tree = classifier.trees[0]
         print("\nFinished, training took \(duration / Double(CLOCKS_PER_SEC))")
+        print("Tree depth: \(tree.maxDepth), leaves: \(tree.numLeaves)")
         print("Model accuracy: \(accuracy)")
     }
 }
