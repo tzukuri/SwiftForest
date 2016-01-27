@@ -196,7 +196,7 @@ final public class Node: CustomStringConvertible {
         if left.leaf {
             guard let index = left.outputIndex else { fatalError() }
             let output = tree.trainingSet.outputs[index]
-            description += "\(leftPrefix) : \(output)\n"
+            description += "\(leftPrefix) : \(output) \(left.probabilities!)\n"
         } else {
             description += leftPrefix + "\n"
             description += left.description
@@ -207,7 +207,7 @@ final public class Node: CustomStringConvertible {
         if right.leaf {
             guard let index = right.outputIndex else { fatalError() }
             let output = tree.trainingSet.outputs[index]
-            description += "\(rightPrefix) : \(output)\n"
+            description += "\(rightPrefix) : \(output) \(right.probabilities!)\n"
         } else {
             description += rightPrefix + "\n"
             description += right.description

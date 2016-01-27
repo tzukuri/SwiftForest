@@ -82,6 +82,7 @@ class TestCommand: OptionCommandType {
         )
 
         print("Creating \(trainingFolds) training folds...")
+        trainingSet.shuffleExamples()
         let folds = CrossFoldValidation(
             trainingSet: trainingSet,
             folds: trainingFolds,

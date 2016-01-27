@@ -40,6 +40,21 @@ final public class TrainingSet {
         trainingSet.examples = examples
         return trainingSet
     }
+
+    public func shuffleExamples() {
+        // ensure shuffle is consistent
+        srand48(1)
+
+        // can't shuffle 0-1 item sets
+        let count = examples.count
+        if count < 2 { return }
+
+        for i in 0..<(count - 1) {
+            let j = (lrand48() % (count - i)) + i
+            guard i != j else { continue }
+            swap(&examples[i], &examples[j])
+        }
+    }
 }
 
 final public class SubSet {
