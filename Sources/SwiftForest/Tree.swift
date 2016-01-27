@@ -88,6 +88,8 @@ final public class Tree: Classifier, CustomStringConvertible {
     
     public func train(trainingSet: TrainingSet) {
         delegate?.trainingWillStartWithSteps(1)
+
+        // the root node splits a SubSet covering all examples
         self.trainingSet = trainingSet
         let allExamples = SubSet(examples: trainingSet.examples, trainingSet: trainingSet)
 
@@ -95,6 +97,10 @@ final public class Tree: Classifier, CustomStringConvertible {
         if numFeatures == nil {
             numFeatures = Int(sqrt(Double(trainingSet.features.count)))
         }
+
+        // reset breadth/depth tracking
+        numLeaves = 0
+        maxDepth = 0
 
         // reset the root node on train so the tree can be re-used
         root = Node()
