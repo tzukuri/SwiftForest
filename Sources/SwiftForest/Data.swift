@@ -19,6 +19,14 @@ final public class TrainingSet {
         self.features = features
         self.outputs = outputs
     }
+
+    public var numOutputs: Int {
+        return outputs.count
+    }
+
+    public var numFeatures: Int {
+        return features.count
+    }
     
     public func addExample(values: [Double], output: Int) {
         assert(values.count == features.count)
@@ -35,28 +43,40 @@ final public class TrainingSet {
 }
 
 final public class SubSet {
-    public var examples: [Example]
+    public var examples = [Example]()
+    public var outputCounts: [Int]
     
-    public init(examples: [Example]) {
-        self.examples = examples
+    public init(examples: [Example], trainingSet: TrainingSet) {
+        self.outputCounts = Array<Int>(count: trainingSet.numOutputs, repeatedValue: 0)
+
+        for example in examples {
+            self.append(example)
+        }
     }
     
-    public init() {
-        self.examples = []
+    public convenience init(trainingSet: TrainingSet) {
+        self.init(examples: [], trainingSet: trainingSet)
     }
     
     public var count: Int {
         return examples.count
     }
     
+    /// True when all examples have the same output class
     public var allEqualOutputs: Bool {
-        guard let output = examples.first?.output else { return true }
-        return !examples.dropFirst().contains { $0.output != output }
+        let zeroOutputs = outputCounts.filter({ $0 == 0 }).count
+        return zeroOutputs == (outputCounts.count - 1)
     }
     
+    /// True when all examples have the same values
     public var allEqualValues: Bool {
         guard let values = examples.first?.values else { return true }
         return !examples.dropFirst().contains { $0.values != values }
+    }
+
+    public func append(example: Example) {
+        outputCounts[example.output] += 1
+        examples.append(example)
     }
     
     public func featureRanges() -> [(min: Double, max: Double)] {
@@ -74,21 +94,12 @@ final public class SubSet {
         
         return ranges
     }
-    
-    public func outputCounts() -> [Int: Int] {
-        var counts = [Int: Int]()
-        for example in examples {
-            counts[example.output] = (counts[example.output] ?? 0) + 1
-        }
-        
-        return counts
-    }
-    
+
     public func entropy() -> Double {
         let totalCount = Double(examples.count)
         var totalEntropy = 0.0
         
-        for (_, count) in outputCounts() {
+        for count in outputCounts {
             let prob = Double(count) / totalCount
             let entropy = prob * log2(prob)
             totalEntropy -= entropy

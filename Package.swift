@@ -19,6 +19,10 @@ let package = Package(
         .Package(
             url: "https://github.com/jakeheis/SwiftCLI",
             majorVersion: 1
+        ),
+        .Package(
+            url: "https://github.com/jkandzi/Progress.swift",
+            majorVersion: 0
         )
     ]
 )

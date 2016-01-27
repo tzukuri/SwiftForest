@@ -77,7 +77,7 @@ final public class Tree: Classifier {
     public func train(trainingSet: TrainingSet) {
         delegate?.trainingWillStartWithSteps(1)
         self.trainingSet = trainingSet
-        let allExamples = SubSet(examples: trainingSet.examples)
+        let allExamples = SubSet(examples: trainingSet.examples, trainingSet: trainingSet)
 
         // default numFeatures to sqrt(|features|)
         if numFeatures == nil {
@@ -115,20 +115,22 @@ final internal class Split {
     let index: Int
     let value: Double
     var score = 0.0
-    let left = SubSet()
-    let right = SubSet()
+    let left: SubSet
+    let right: SubSet
     
-    init(index: Int, range: (min: Double, max: Double)) {
+    init(index: Int, range: (min: Double, max: Double), trainingSet: TrainingSet) {
         let interval = range.max - range.min
         self.value = (drand48() * interval) + range.min
         self.index = index
+        self.left = SubSet(trainingSet: trainingSet)
+        self.right = SubSet(trainingSet: trainingSet)
     }
     
     func addExample(example: Example) {
         if example.values[index] < value {
-            left.examples.append(example)
+            left.append(example)
         } else {
-            right.examples.append(example)
+            right.append(example)
         }
     }
     
@@ -209,7 +211,7 @@ final public class Node {
         // create random splits for each selected feature
         var splits = [Split]()
         for (index, range) in zip(indexes, ranges) {
-            splits.append(Split(index: index, range: range))
+            splits.append(Split(index: index, range: range, trainingSet: tree.trainingSet))
         }
         
         // collect subsets for each potential split

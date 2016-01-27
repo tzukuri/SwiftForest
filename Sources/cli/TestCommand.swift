@@ -77,17 +77,18 @@ class TestCommand: OptionCommandType {
 
     func execute(arguments: CommandArguments) throws  {
         print("Reading training file...")
-        let path = arguments.requiredArgument("training_file")
-        let trainingSet = CSV.read(path)
+        let trainingSet = CSV.read(
+            arguments.requiredArgument("training_file")
+        )
 
-        print("Creating folds...")
+        print("Creating \(trainingFolds) folds...")
         let folds = CrossFoldValidation(
             trainingSet: trainingSet,
             folds: trainingFolds,
             delegate: CrossFoldProgress()
         )
 
-        print("Training and testing forest...")
+        print("Forest of \(forestSize) trees per fold")
         let classifier = Forest(
             size: forestSize,
             numFeatures: numFeatures,
@@ -97,12 +98,13 @@ class TestCommand: OptionCommandType {
         )
 
         // train and score folds
+        print("Training and testing \(testingFolds) folds")
         let start = clock()
         let accuracy = folds.score(classifier, maxFolds: testingFolds)
 
         // print total testing duration and average fold accuracy
         let duration = Double(clock() - start)
-        print("Finished, training took \(duration / Double(CLOCKS_PER_SEC))")
+        print("\nFinished, training took \(duration / Double(CLOCKS_PER_SEC))")
         print("Model accuracy: \(accuracy)")
     }
 }
