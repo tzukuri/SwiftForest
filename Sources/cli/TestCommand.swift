@@ -91,9 +91,11 @@ class TestCommand: OptionCommandType {
             model.removeFeatures(indexes)
         }
 
+        // print labels so the result of --remove-features can be seen
         print("Features: \(model.features)")
         print("Output classes: \(model.outputs)")
 
+        // prepare folds
         print("Creating \(trainingFolds) training folds...")
         trainingSet.shuffleExamples()
         let folds = CrossFoldValidation(
@@ -102,6 +104,7 @@ class TestCommand: OptionCommandType {
             delegate: CrossFoldProgress()
         )
 
+        // prepare classifier
         print("\nForest of \(forestSize) trees per fold")
         let classifier = TrainableForest(
             model: model,

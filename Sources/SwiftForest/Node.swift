@@ -13,6 +13,7 @@ public class Node: CustomStringConvertible {
 
     // leaf
     public var outputDistribution: Distribution? = nil  // probability of each output class
+    public var centroid: [Double]? = nil                // mean of examples remaining at the leaf
 
     // node
     public var left: Node?  = nil                       // < splitValue
@@ -158,7 +159,20 @@ final public class TrainableNode: Node {
     /// Calculate the output class probabilities, and keep track of the output with
     /// the highest probability for classification.
     func calculateOutputProbabilities() {
-        self.outputDistribution = subset.outputDistribution
+        // copy class distribution from subset
+        outputDistribution = subset.outputDistribution
+
+        // calculate the geometric mean (centroid) of the examples in the subset
+        var centroid = Array<Double>(count: model.numFeatures, repeatedValue: 0.0)
+
+        for example in subset.examples {
+            for (i, value) in example.values.enumerate() {
+                centroid[i] += value
+            }
+        }
+
+        let exampleCount = Double(subset.examples.count)
+        self.centroid = centroid.map { $0 / exampleCount }
 
         // depth and breadth tracking
         tree.maxDepth = max(tree.maxDepth, depth)
