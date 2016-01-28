@@ -115,7 +115,7 @@ final public class TrainableTree: Tree, TrainableClassifier {
 
         // default pickFeatures to sqrt(|features|)
         if pickFeatures == nil {
-            pickFeatures = Int(sqrt(Double(model.features.count)))
+            pickFeatures = Int(sqrt(Double(model.numFeatures)))
         }
 
         // reset the root node on train so the tree can be reused

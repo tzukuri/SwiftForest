@@ -13,22 +13,27 @@ public class Forest: Classifier {
     }
 
     public func classify(values: [Double]) -> Int {
-        var counts = [Int: Int]()
+        var counts = Array<Int>(count: model.numOutputs, repeatedValue: 0)
         
         // classify values in each tree and count number of times
         // each output class is selected
         for tree in trees {
             let output = tree.classify(values)
-            counts[output] = (counts[output] ?? 0) + 1
+            counts[output] += 1
         }
         
-        // sort output classes by count ($0 and $1 are (key, value))
-        // maxElement expects result of: $0 ordered before $1
-        if let mode = counts.maxElement({ $0.1 < $1.1 }) {
-            return mode.0
-        } else {
-            return counts.values.first!
+        // find the output class mode
+        var maxCount = counts[0]
+        var maxIndex = 0
+
+        for (i, count) in counts.enumerate() {
+            if count > maxCount {
+                maxCount = count
+                maxIndex = i
+            }
         }
+
+        return maxIndex
     }
 }
 

@@ -154,32 +154,28 @@ final public class TrainableNode: Node {
     /// Calculate the output class probabilities, and keep track of the output with
     /// the highest probability for classification.
     func calculateOutputProbabilities() {
-        let examples = subset.examples
-        let examplesCount = Double(examples.count)
-        let outputs = tree.model.outputs.count
+        // subset counts instances of each output class
+        var probabilities = subset.outputCounts.map { Double($0) }
+        let examplesCount = Double(subset.examples.count)
         
-        // count instances of each output class
-        var probabilities = Array<Double>(count: outputs, repeatedValue: 0.0)
-        for example in examples {
-            probabilities[Int(example.output)] += 1.0
-        }
-        
-        // divide through by the number of examples to produce probabilities
+        // divide through by the number of examples to produce probabilities and
+        // keep track of the most probable output class
         var maxProb = 0.0
-        var index = 0
-        for i in 0..<outputs {
+        var maxIndex = 0
+
+        for i in 0..<probabilities.count {
             let prob = probabilities[i] / examplesCount
             probabilities[i] = prob
             
             // keep track of highest probability output class
             if prob > maxProb {
                 maxProb = prob
-                index = i
+                maxIndex = i
             }
         }
         
         self.probabilities = probabilities
-        self.outputIndex = index
+        self.outputIndex = maxIndex
 
         // depth and breadth tracking
         tree.maxDepth = max(tree.maxDepth, depth)
