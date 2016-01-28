@@ -1,5 +1,37 @@
 import Foundation
 
+// ---------------------------------------
+// model
+// ---------------------------------------
+final public class Model {
+    public var features: [String]
+    public var outputs: [String]
+
+    public init(features: [String], outputs: [String]) {
+        self.features = features
+        self.outputs = outputs
+    }
+
+    public convenience init() {
+        self.init(features: [], outputs: [])
+    }
+
+    public var numOutputs: Int {
+        return outputs.count
+    }
+
+    public var numFeatures: Int {
+        return features.count
+    }
+}
+
+
+
+// ---------------------------------------
+// training
+// ---------------------------------------
+/// Single training example index. `output' is the index of the output
+/// class and must be within 0..<outputs.count
 final public class Example {
     public var values: [Double]
     public var output: Int
@@ -10,35 +42,23 @@ final public class Example {
     }
 }
 
+
+/// Collection of examples to use during training
 final public class TrainingSet {
-    public var examples = [Example]()
-    public var features: [String]
-    public var outputs: [String]
-    
-    public init(features: [String], outputs: [String]) {
-        self.features = features
-        self.outputs = outputs
+    public var examples: [Example]
+
+    public init(examples: [Example]) {
+        self.examples = examples
     }
 
-    public var numOutputs: Int {
-        return outputs.count
-    }
-
-    public var numFeatures: Int {
-        return features.count
+    public convenience init() {
+        self.init(examples: [])
     }
     
     public func addExample(values: [Double], output: Int) {
-        assert(values.count == features.count)
-        assert(output < outputs.count)
-        assert(output >= 0)
-        examples.append(Example(values: values, output: output))
-    }
-
-    public func cloneWithExamples(examples: [Example]) -> TrainingSet {
-        let trainingSet = TrainingSet(features: features, outputs: outputs)
-        trainingSet.examples = examples
-        return trainingSet
+        examples.append(
+            Example(values: values, output: output)
+        )
     }
 
     public func shuffleExamples() {
@@ -57,20 +77,23 @@ final public class TrainingSet {
     }
 }
 
+
+/// Reduced set of examples from an initial training set. Nodes in a tree
+/// train on subsets which are created by splitting higher level subsets
+/// on randomly selected split points.
 final public class SubSet {
     public var examples = [Example]()
     public var outputCounts: [Int]
     
-    public init(examples: [Example], trainingSet: TrainingSet) {
-        self.outputCounts = Array<Int>(count: trainingSet.numOutputs, repeatedValue: 0)
-
+    public init(examples: [Example], model: Model) {
+        self.outputCounts = Array<Int>(count: model.numOutputs, repeatedValue: 0)
         for example in examples {
             self.append(example)
         }
     }
     
-    public convenience init(trainingSet: TrainingSet) {
-        self.init(examples: [], trainingSet: trainingSet)
+    public convenience init(model: Model) {
+        self.init(examples: [], model: model)
     }
     
     public var count: Int {
@@ -89,11 +112,14 @@ final public class SubSet {
         return !examples.dropFirst().contains { $0.values != values }
     }
 
+    /// Append a new example to the subset and increment `outputCounts'
     public func append(example: Example) {
         outputCounts[example.output] += 1
         examples.append(example)
     }
     
+    /// Returns an array of (min, max) tuples for each feature in the model, i.e
+    /// where min in the smallest observed value of a feature in this subset
     public func featureRanges() -> [(min: Double, max: Double)] {
         var ranges = [(min: Double, max: Double)]()
         for value in examples.first!.values {
@@ -110,6 +136,7 @@ final public class SubSet {
         return ranges
     }
 
+    /// Calculates the information entropy over the subset's output probabilities
     public func entropy() -> Double {
         let totalCount = Double(examples.count)
         var totalEntropy = 0.0

@@ -33,7 +33,7 @@ class TestCommand: OptionCommandType {
     var testingFolds = 10
     var trainingFolds = 10
     var forestSize = 100
-    var numFeatures: Int? = nil
+    var pickFeatures: Int? = nil
     var minExamples = 2
     var randomSeed = 1
 
@@ -58,7 +58,7 @@ class TestCommand: OptionCommandType {
 
         options.onKeys(["-e", "--features"], usage: "Number of features to compare at each tree node (default: sqrt(|features|))", valueSignature: "features") {(key, value) in
             if let features = Int(value) {
-                self.numFeatures = features
+                self.pickFeatures = features
             }
         }
 
@@ -77,7 +77,7 @@ class TestCommand: OptionCommandType {
 
     func execute(arguments: CommandArguments) throws  {
         print("Reading training file...")
-        let trainingSet = CSV.read(
+        let (model, trainingSet) = CSV.read(
             arguments.requiredArgument("training_file")
         )
 
@@ -90,9 +90,10 @@ class TestCommand: OptionCommandType {
         )
 
         print("\nForest of \(forestSize) trees per fold")
-        let classifier = Forest(
+        let classifier = TrainableForest(
+            model: model,
             size: forestSize,
-            numFeatures: numFeatures,
+            pickFeatures: pickFeatures,
             minExamples: minExamples,
             randomSeed: randomSeed,
             delegate: ClassifierProgress()
@@ -105,7 +106,7 @@ class TestCommand: OptionCommandType {
 
         // print total testing duration and average fold accuracy
         let duration = start.timeIntervalSinceNow * -1
-        let tree = classifier.trees[0]
+        let tree = classifier.trees[0] as! TrainableTree
         print("\nFinished, training took \(duration)")
         print("Tree depth: \(tree.maxDepth), leaves: \(tree.numLeaves)")
         print("Model accuracy: \(accuracy)")
