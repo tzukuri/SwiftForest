@@ -30,10 +30,11 @@ class TestCommand: OptionCommandType {
     let commandShortDescription = "Trains a new forest on an input file and measures accuracy"
     let commandSignature = "<training_file>"
 
+    var removeFeatures: [Int]? = nil
+    var pickFeatures: Int? = nil
     var testingFolds = 10
     var trainingFolds = 10
     var forestSize = 100
-    var pickFeatures: Int? = nil
     var minExamples = 2
     var randomSeed = 1
 
@@ -73,6 +74,10 @@ class TestCommand: OptionCommandType {
                 self.randomSeed = seed
             }
         }
+
+        options.onKeys(["-x", "--remove-features"], usage: "Comma separated list of feature indexes to remove before training", valueSignature: "indexes") {(key, indexes) in
+            self.removeFeatures = indexes.componentsSeparatedByString(",").map { Int($0)! }
+        }
     }
 
     func execute(arguments: CommandArguments) throws  {
@@ -80,6 +85,14 @@ class TestCommand: OptionCommandType {
         let (model, trainingSet) = CSV.read(
             arguments.requiredArgument("training_file")
         )
+
+        if let indexes = removeFeatures {
+            trainingSet.removeFeatures(indexes)
+            model.removeFeatures(indexes)
+        }
+
+        print("Features: \(model.features)")
+        print("Output classes: \(model.outputs)")
 
         print("Creating \(trainingFolds) training folds...")
         trainingSet.shuffleExamples()

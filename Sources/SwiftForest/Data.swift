@@ -23,6 +23,12 @@ final public class Model {
     public var numFeatures: Int {
         return features.count
     }
+
+    public func removeFeatures(indexes: [Int]) {
+        for (i, index) in indexes.enumerate() {
+            features.removeAtIndex(index - i)
+        }
+    }
 }
 
 
@@ -140,6 +146,14 @@ final public class TrainingSet {
             let j = (lrand48() % (count - i)) + i
             guard i != j else { continue }
             swap(&examples[i], &examples[j])
+        }
+    }
+
+    public func removeFeatures(indexes: [Int]) {
+        for example in examples {
+            for (i, index) in indexes.enumerate() {
+                example.values.removeAtIndex(index - i)
+            }
         }
     }
 }

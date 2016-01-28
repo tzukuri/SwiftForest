@@ -43,7 +43,7 @@ final public class TestSet {
 
 
 // ---------------------------------------
-// cross fold validation
+// X-cross fold validation
 // ---------------------------------------
 public protocol CrossFoldValidationDelegate {
     mutating func validationProgress(fold: Int)
