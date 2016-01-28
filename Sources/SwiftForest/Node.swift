@@ -8,16 +8,15 @@ public class Node: CustomStringConvertible {
     public var depth: Int
 
     // split point
-    public var splitIndex: Int? = nil          // feature index
-    public var splitValue: Double? = nil       // split point
+    public var splitIndex: Int? = nil                   // feature index
+    public var splitValue: Double? = nil                // split point
 
     // leaf
-    public var probabilities: [Double]? = nil  // probability of each output class
-    public var outputIndex: Int?               // index of the highest probability output
+    public var outputDistribution: Distribution? = nil  // probability of each output class
 
     // node
-    public var left: Node?  = nil              // < splitValue
-    public var right: Node? = nil              // >= splitValue
+    public var left: Node?  = nil                       // < splitValue
+    public var right: Node? = nil                       // >= splitValue
 
     init(model: Model, depth: Int) {
         self.model = model
@@ -50,11 +49,11 @@ public class Node: CustomStringConvertible {
         let prefix = "\(prefix) \(comparator) \(splitValue!)"
 
         if node.leaf {
-            guard let index = node.outputIndex, probabilities = node.probabilities else {
+            guard let outputDistribution = node.outputDistribution else {
                 fatalError("Cannot generate description for leaf with no output")
             }
 
-            return "\(prefix) : \(model.outputs[index]) \(probabilities)\n"
+            return "\(prefix) : \(model.outputs[outputDistribution.max()]) \(outputDistribution.probabilities)\n"
 
         } else {
             return "\(prefix)\n\(node.description)"
@@ -102,6 +101,11 @@ final internal class Split {
         } else {
             right.append(example)
         }
+    }
+
+    func finalise() {
+        left.finalise()
+        right.finalise()
     }
     
     func entropy() -> Double {
@@ -154,28 +158,7 @@ final public class TrainableNode: Node {
     /// Calculate the output class probabilities, and keep track of the output with
     /// the highest probability for classification.
     func calculateOutputProbabilities() {
-        // subset counts instances of each output class
-        var probabilities = subset.outputCounts.map { Double($0) }
-        let examplesCount = Double(subset.examples.count)
-        
-        // divide through by the number of examples to produce probabilities and
-        // keep track of the most probable output class
-        var maxProb = 0.0
-        var maxIndex = 0
-
-        for i in 0..<probabilities.count {
-            let prob = probabilities[i] / examplesCount
-            probabilities[i] = prob
-            
-            // keep track of highest probability output class
-            if prob > maxProb {
-                maxProb = prob
-                maxIndex = i
-            }
-        }
-        
-        self.probabilities = probabilities
-        self.outputIndex = maxIndex
+        self.outputDistribution = subset.outputDistribution
 
         // depth and breadth tracking
         tree.maxDepth = max(tree.maxDepth, depth)
@@ -211,6 +194,10 @@ final public class TrainableNode: Node {
             for split in splits {
                 split.addExample(example)
             }
+        }
+
+        for split in splits {
+            split.finalise()
         }
         
         // score each split using weighted information gain

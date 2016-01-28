@@ -9,6 +9,7 @@ import Foundation
 // protocols
 // ---------------------------------------
 public protocol Classifier {
+    func distribution(values: [Double]) -> Distribution
     func classify(values: [Double]) -> Int
     var model: Model { get }
 }
@@ -45,7 +46,7 @@ public class Tree: Classifier, CustomStringConvertible {
         }
     }
 
-    public func classify(values: [Double]) -> Int {
+    internal func findLeafNode(values: [Double]) -> Node {
         guard let root = self.root else {
             fatalError("Cannot call classify on tree with no root node")
         }
@@ -63,12 +64,21 @@ public class Tree: Classifier, CustomStringConvertible {
                 node = node.right!
             }
         }
-        
-        guard let index = node.outputIndex else {
+
+        return node
+    }
+
+    public func distribution(values: [Double]) -> Distribution {
+        let node = findLeafNode(values)
+        if let outputDistribution = node.outputDistribution {
+            return outputDistribution
+        } else {
             fatalError("Cannot classify on untrained node")
         }
+    }
 
-        return index
+    public func classify(values: [Double]) -> Int {
+        return distribution(values).max()
     }
 }
 

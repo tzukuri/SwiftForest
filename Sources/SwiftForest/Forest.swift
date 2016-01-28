@@ -12,28 +12,23 @@ public class Forest: Classifier {
         self.trees = trees
     }
 
-    public func classify(values: [Double]) -> Int {
-        var counts = Array<Int>(count: model.numOutputs, repeatedValue: 0)
+    public func distribution(values: [Double]) -> Distribution {
+        let distribution = Distribution(count: model.numOutputs)
         
         // classify values in each tree and count number of times
         // each output class is selected
         for tree in trees {
             let output = tree.classify(values)
-            counts[output] += 1
-        }
-        
-        // find the output class mode
-        var maxCount = counts[0]
-        var maxIndex = 0
-
-        for (i, count) in counts.enumerate() {
-            if count > maxCount {
-                maxCount = count
-                maxIndex = i
-            }
+            distribution.increment(output)
         }
 
-        return maxIndex
+        // weight by total count to form probabilities
+        distribution.finalise()
+        return distribution
+    }
+
+    public func classify(values: [Double]) -> Int {
+        return distribution(values).max()
     }
 }
 

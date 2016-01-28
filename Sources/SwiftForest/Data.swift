@@ -28,6 +28,73 @@ final public class Model {
 
 
 // ---------------------------------------
+// probability distribution
+// ---------------------------------------
+final public class Distribution {
+    public var probabilities: [Double]
+    public var instances = 0.0
+    public var finalised = false
+    public let count: Int
+
+    // memoised functions
+    internal var _max: Int? = nil
+
+    public init(count: Int) {
+        self.probabilities = Array<Double>(count: count, repeatedValue: 0.0)
+        self.count = count
+    }
+
+    /// Increment the count of one of the classes by 1
+    public func increment(index: Int) {
+        probabilities[index] += 1.0
+        instances += 1.0
+    }
+
+    /// Indicate counting has finished and prepare the probabilities array
+    public func finalise() {
+        if finalised { return }
+        finalised = true
+
+        for i in 0..<probabilities.count {
+            probabilities[i] /= instances
+        }
+    }
+
+    /// Returns the index of the class with the highest probability
+    public func max() -> Int {
+        if let max = _max { return max }
+        finalise()
+
+        var maxProb  = probabilities[0]
+        var maxIndex = 0
+        
+        for (i, probability) in probabilities.enumerate() {
+            if probability > maxProb {
+                maxProb = probability
+                maxIndex = i
+            }
+        }
+
+        _max = maxIndex
+        return maxIndex
+    }
+
+    /// Calculates the information entropy over the probabilities
+    public func entropy() -> Double {
+        var totalEntropy = 0.0
+        finalise()
+        
+        for probability in probabilities {
+            totalEntropy -= (probability * log2(probability))
+        }
+        
+        return totalEntropy
+    }
+}
+
+
+
+// ---------------------------------------
 // training
 // ---------------------------------------
 /// Single training example index. `output' is the index of the output
@@ -83,10 +150,10 @@ final public class TrainingSet {
 /// on randomly selected split points.
 final public class SubSet {
     public var examples = [Example]()
-    public var outputCounts: [Int]
+    public var outputDistribution: Distribution
     
     public init(examples: [Example], model: Model) {
-        self.outputCounts = Array<Int>(count: model.numOutputs, repeatedValue: 0)
+        self.outputDistribution = Distribution(count: model.numOutputs)
         for example in examples {
             self.append(example)
         }
@@ -102,8 +169,8 @@ final public class SubSet {
     
     /// True when all examples have the same output class
     public var allEqualOutputs: Bool {
-        let zeroOutputs = outputCounts.filter({ $0 == 0 }).count
-        return zeroOutputs == (outputCounts.count - 1)
+        let zeroOutputs = outputDistribution.probabilities.filter({ $0 == 0.0 }).count
+        return zeroOutputs == (outputDistribution.count - 1)
     }
     
     /// True when all examples have the same values
@@ -114,8 +181,12 @@ final public class SubSet {
 
     /// Append a new example to the subset and increment `outputCounts'
     public func append(example: Example) {
-        outputCounts[example.output] += 1
+        outputDistribution.increment(example.output)
         examples.append(example)
+    }
+
+    public func finalise() {
+        outputDistribution.finalise()
     }
     
     /// Returns an array of (min, max) tuples for each feature in the model, i.e
@@ -138,16 +209,7 @@ final public class SubSet {
 
     /// Calculates the information entropy over the subset's output probabilities
     public func entropy() -> Double {
-        let totalCount = Double(examples.count)
-        var totalEntropy = 0.0
-        
-        for count in outputCounts {
-            let prob = Double(count) / totalCount
-            let entropy = prob * log2(prob)
-            totalEntropy -= entropy
-        }
-        
-        return totalEntropy
+        return outputDistribution.entropy()
     }
 }
 
