@@ -7,12 +7,12 @@ final public class TestSet {
     public var trainingSet: TrainingSet
     public var testExamples: ArraySlice<Example>
 
-    init(trainingSet: TrainingSet, testExamples: ArraySlice<Example>) {
+    public init(trainingSet: TrainingSet, testExamples: ArraySlice<Example>) {
         self.trainingSet = trainingSet
         self.testExamples = testExamples
     }
 
-    convenience init(trainingSet: TrainingSet, testRange: Range<Int>) {
+    public convenience init(trainingSet: TrainingSet, testRange: Range<Int>) {
         var trainingExamples = trainingSet.examples
 
         // extract test examples in the test fold range
@@ -25,9 +25,8 @@ final public class TestSet {
         self.init(trainingSet: trainingSet, testExamples: testExamples)
     }
 
-    func score(classifier: TrainableClassifier) -> Double {
+    public func score(classifier: TrainableClassifier) -> Double {
         var correct = 0.0
-        classifier.train(trainingSet)
 
         for example in testExamples {
             let output = classifier.classify(example.values)
@@ -37,6 +36,10 @@ final public class TestSet {
         }
 
         return correct / Double(testExamples.count)
+    }
+
+    public func train(classifier: TrainableClassifier) {
+        classifier.train(trainingSet)
     }
 }
 
@@ -72,6 +75,7 @@ final public class CrossFoldValidation {
         for (i, testSet) in testSets.enumerate() {
             if i >= folds { break }
             delegate?.validationProgress(i)
+            testSet.train(classifier)
             sum += testSet.score(classifier)
         }
 

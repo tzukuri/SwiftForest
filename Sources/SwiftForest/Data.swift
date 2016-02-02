@@ -91,6 +91,7 @@ final public class Distribution {
         finalise()
         
         for probability in probabilities {
+            if probability == 0.0 { continue }
             totalEntropy -= (probability * log2(probability))
         }
         

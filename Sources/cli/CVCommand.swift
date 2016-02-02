@@ -25,9 +25,9 @@ struct ClassifierProgress: ClassifierDelegate {
     }
 }
 
-class TestCommand: OptionCommandType {
-    let commandName = "test"
-    let commandShortDescription = "Trains a new forest on an input file and measures accuracy"
+class CVCommand: OptionCommandType {
+    let commandName = "cv"
+    let commandShortDescription = "Trains forests on an input file and measures accuracy with cross fold validation"
     let commandSignature = "<training_file>"
 
     var removeFeatures: [Int]? = nil
