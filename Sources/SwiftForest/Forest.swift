@@ -12,13 +12,13 @@ public class Forest: Classifier {
         self.trees = trees
     }
 
-    public func distribution(values: [Double]) -> Distribution {
+    public func distribution(row: Row) -> Distribution {
         let distribution = Distribution(count: model.numOutputs)
         
         // classify values in each tree and count number of times
         // each output class is selected
         for tree in trees {
-            let output = tree.classify(values)
+            let output = tree.classify(row)
             distribution.increment(output)
         }
 
@@ -27,8 +27,8 @@ public class Forest: Classifier {
         return distribution
     }
 
-    public func classify(values: [Double]) -> Int {
-        return distribution(values).max()
+    public func classify(row: Row) -> Int {
+        return distribution(row).max()
     }
 }
 
@@ -63,7 +63,7 @@ final public class TrainableForest: Forest, TrainableClassifier {
     }
     
     public func train(trainingSet: TrainingSet) {
-        delegate?.trainingWillStartWithSteps(trees.count)
+        delegate?.progressSteps(trees.count)
         srand48(randomSeed)
 
         // set the random seed for each tree before looping so the
@@ -78,9 +78,9 @@ final public class TrainableForest: Forest, TrainableClassifier {
         dispatch_apply(trees.count, queue) { index in
             let tree = self.trees[index] as! TrainableTree
             tree.train(trainingSet)
-            self.delegate?.trainingDidCompleteStep()
+            self.delegate?.step()
         }
 
-        delegate?.trainingDidFinish()
+        delegate?.finish()
     }
 }

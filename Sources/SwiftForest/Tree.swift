@@ -9,8 +9,8 @@ import Foundation
 // protocols
 // ---------------------------------------
 public protocol Classifier {
-    func distribution(values: [Double]) -> Distribution
-    func classify(values: [Double]) -> Int
+    func distribution(row: Row) -> Distribution
+    func classify(row: Row) -> Int
     var model: Model { get }
 }
 
@@ -20,9 +20,9 @@ public protocol TrainableClassifier: Classifier {
 }
 
 public protocol ClassifierDelegate {
-    mutating func trainingWillStartWithSteps(count: Int)
-    mutating func trainingDidCompleteStep()
-    mutating func trainingDidFinish()
+    mutating func progressSteps(count: Int)
+    mutating func step()
+    mutating func finish()
 }
 
 
@@ -46,7 +46,7 @@ public class Tree: Classifier, CustomStringConvertible {
         }
     }
 
-    internal func findLeafNode(values: [Double]) -> Node {
+    internal func findLeafNode(row: Row) -> Node {
         guard let root = self.root else {
             fatalError("Cannot call classify on tree with no root node")
         }
@@ -58,7 +58,7 @@ public class Tree: Classifier, CustomStringConvertible {
                 fatalError("Cannot classify on untrained node")
             }
 
-            if values[index] < value {
+            if row.values[index] < value {
                 node = node.left!
             } else {
                 node = node.right!
@@ -68,8 +68,8 @@ public class Tree: Classifier, CustomStringConvertible {
         return node
     }
 
-    public func distribution(values: [Double]) -> Distribution {
-        let node = findLeafNode(values)
+    public func distribution(row: Row) -> Distribution {
+        let node = findLeafNode(row)
         if let outputDistribution = node.outputDistribution {
             return outputDistribution
         } else {
@@ -77,8 +77,8 @@ public class Tree: Classifier, CustomStringConvertible {
         }
     }
 
-    public func classify(values: [Double]) -> Int {
-        return distribution(values).max()
+    public func classify(row: Row) -> Int {
+        return distribution(row).max()
     }
 }
 
@@ -113,7 +113,7 @@ final public class TrainableTree: Tree, TrainableClassifier {
     }
     
     public func train(trainingSet: TrainingSet) {
-        delegate?.trainingWillStartWithSteps(1)
+        delegate?.progressSteps(1)
 
         // the root node splits a SubSet covering all examples
         let allExamples = SubSet(examples: trainingSet.examples, model: model)
@@ -134,7 +134,7 @@ final public class TrainableTree: Tree, TrainableClassifier {
         root = rootNode
 
         // there's only a single tree to build, so progress is 0.0 -> 1.0
-        delegate?.trainingDidCompleteStep()
-        delegate?.trainingDidFinish()
+        delegate?.step()
+        delegate?.finish()
     }
 }

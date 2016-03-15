@@ -9,8 +9,9 @@ CLI.setup(
 )
 
 CLI.registerCommands([
-    CVCommand(),
-    HoldoutCommand()
+    TrainCommand(),
+    ClassifyCommand(),
+    TestCommand()
 ])
 
 CLI.go()

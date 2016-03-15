@@ -4,6 +4,10 @@ import Foundation
 // model
 // ---------------------------------------
 final public class Model {
+    enum ModelError: ErrorType {
+        case UnmatchedFeatures
+    }
+
     public var features: [String]
     public var outputs: [String]
 
@@ -27,6 +31,18 @@ final public class Model {
     public func removeFeatures(indexes: [Int]) {
         for (i, index) in indexes.enumerate() {
             features.removeAtIndex(index - i)
+        }
+    }
+
+    public func merge(features otherFeatures: [String], outputs otherOutputs: [String]) throws {
+        if otherFeatures != features {
+            throw ModelError.UnmatchedFeatures
+        }
+
+        for outputClass in otherOutputs {
+            if outputs.indexOf(outputClass) == nil {
+                outputs.append(outputClass)
+            }
         }
     }
 }
@@ -102,58 +118,105 @@ final public class Distribution {
 
 
 // ---------------------------------------
-// training
+// classification
 // ---------------------------------------
-/// Single training example index. `output' is the index of the output
-/// class and must be within 0..<outputs.count
-final public class Example {
+/// Single row of data. Rows are used during training, testing,
+/// and classification.
+public class Row {
     public var values: [Double]
-    public var output: Int
-    
-    public init(values: [Double], output: Int) {
+    public init(values: [Double]) {
         self.values = values
-        self.output = output
     }
 }
 
 
-/// Collection of examples to use during training
-final public class TrainingSet {
-    public var examples: [Example]
+/// Collection of rows to use during classification.
+public class RowSet: SequenceType {
+    public typealias Generator = IndexingGenerator<[Row]>
+    public var rows: [Row]
 
-    public init(examples: [Example]) {
-        self.examples = examples
+    public var count: Int {
+        return rows.count
+    }
+
+    public init(rows: [Row]) {
+        self.rows = rows
     }
 
     public convenience init() {
-        self.init(examples: [])
+        self.init(rows: [])
     }
-    
-    public func addExample(values: [Double], output: Int) {
-        examples.append(
-            Example(values: values, output: output)
+
+    public func generate() -> RowSet.Generator {
+        return rows.generate()
+    }
+
+    public func addRow(values: [Double]) {
+        rows.append(
+            Row(values: values)
         )
     }
 
-    public func shuffleExamples() {
+    public func shuffle() {
         // ensure shuffle is consistent
         srand48(1)
 
         // can't shuffle 0-1 item sets
-        let count = examples.count
+        let count = rows.count
         if count < 2 { return }
 
         for i in 0..<(count - 1) {
             let j = (lrand48() % (count - i)) + i
             guard i != j else { continue }
-            swap(&examples[i], &examples[j])
+            swap(&rows[i], &rows[j])
         }
     }
 
     public func removeFeatures(indexes: [Int]) {
-        for example in examples {
+        for row in rows {
             for (i, index) in indexes.enumerate() {
-                example.values.removeAtIndex(index - i)
+                row.values.removeAtIndex(index - i)
+            }
+        }
+    }
+}
+
+
+
+// ---------------------------------------
+// training
+// ---------------------------------------
+/// Single training example. `output' is the index of the output
+/// class and must be within 0..<outputs.count
+final public class Example: Row {
+    public var outputClass: String
+    public var output: Int!
+    
+    public init(values: [Double], outputClass: String) {
+        self.outputClass = outputClass
+        super.init(values: values)
+    }
+}
+
+
+/// Collection of examples to use during training/testing
+final public class TrainingSet: RowSet {
+    public var examples: [Example] {
+        return rows as! [Example]
+    }
+
+    public func addExample(values: [Double], outputClass: String) {
+        rows.append(
+            Example(values: values, outputClass: outputClass)
+        )
+    }
+
+    public func setOutputIndexes(model: Model) {
+        for example in examples {
+            if let index = model.outputs.indexOf(example.outputClass) {
+                example.output = index
+            } else {
+                fatalError("Unknown example output class: \(example.outputClass)")
             }
         }
     }
