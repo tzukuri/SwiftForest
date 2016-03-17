@@ -23,6 +23,13 @@ class TrainCommand: Command {
 
     override func execute(arguments: CommandArguments) throws  {
         setup(arguments)
-        let _ = trainingTask.run()
+
+        guard let path = outputPath else {
+            fatalError("Output path was not specified")
+        }
+
+        let classifier = trainingTask.run()
+        let forest = classifier as! Forest
+        ForestSerialiser(forest: forest).write(path)
     }
 }

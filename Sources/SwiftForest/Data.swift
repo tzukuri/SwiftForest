@@ -1,9 +1,12 @@
 import Foundation
+import FetchPack
 
 // ---------------------------------------
 // model
 // ---------------------------------------
-final public class Model {
+final public class Model: Serialisable {
+    public var serialiserType: String { return "Model" }
+
     enum ModelError: ErrorType {
         case UnmatchedFeatures
     }
@@ -18,6 +21,16 @@ final public class Model {
 
     public convenience init() {
         self.init(features: [], outputs: [])
+    }
+
+    public init(deserialiser: FetchPackDeserialiser) {
+        self.features = deserialiser.read()
+        self.outputs = deserialiser.read()
+    }
+
+    public func serialise(serialiser: FetchPackSerialiser) {
+        serialiser.append(features)
+        serialiser.append(outputs)
     }
 
     public var numOutputs: Int {
