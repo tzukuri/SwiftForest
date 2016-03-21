@@ -89,8 +89,10 @@ class Command: OptionCommandType {
     }
 
     func setup(arguments: CommandArguments) {
-        loadTrainingDataTask.paths = arguments.requiredCollectedArgument("training_file")
         trainingTask.loadDataTask = loadTrainingDataTask
+        if loadTrainingDataTask.paths == nil {
+            loadTrainingDataTask.paths = arguments.requiredCollectedArgument("training_file")
+        }
 
         if quietMode {
             loadTrainingDataTask.delegate = nil

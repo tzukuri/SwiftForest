@@ -9,9 +9,14 @@ import Foundation
 // protocols
 // ---------------------------------------
 public protocol Classifier {
-    func distribution(row: Row) -> Distribution
-    func classify(row: Row) -> Int
+    func distribution(row: Row) -> DistributionType
     var model: Model { get }
+}
+
+extension Classifier {
+    public func classify(row: Row) -> Int {
+        return distribution(row).max()
+    }
 }
 
 public protocol TrainableClassifier: Classifier {
@@ -68,17 +73,13 @@ public class Tree: Classifier, CustomStringConvertible {
         return node
     }
 
-    public func distribution(row: Row) -> Distribution {
+    public func distribution(row: Row) -> DistributionType {
         let node = findLeafNode(row)
         if let outputDistribution = node.outputDistribution {
             return outputDistribution
         } else {
             fatalError("Cannot classify on untrained node")
         }
-    }
-
-    public func classify(row: Row) -> Int {
-        return distribution(row).max()
     }
 }
 

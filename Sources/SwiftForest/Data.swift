@@ -65,18 +65,35 @@ final public class Model: Serialisable {
 // ---------------------------------------
 // probability distribution
 // ---------------------------------------
-final public class Distribution {
+public protocol DistributionType {
+    subscript(index: Int) -> Double { get }
+    var count: Int { get }
+    func max() -> Int
+}
+
+final public class Distribution: DistributionType {
     public var probabilities: [Double]
     public var instances = 0.0
     public var finalised = false
-    public let count: Int
 
     // memoised functions
     internal var _max: Int? = nil
 
+    public var count: Int {
+        return probabilities.count
+    }
+
     public init(count: Int) {
         self.probabilities = Array<Double>(count: count, repeatedValue: 0.0)
-        self.count = count
+    }
+
+    public init(probabilities: [Double]) {
+        self.probabilities = probabilities
+        self.finalised = true
+    }
+
+    public subscript(index: Int) -> Double {
+        return probabilities[index]
     }
 
     /// Increment the count of one of the classes by 1

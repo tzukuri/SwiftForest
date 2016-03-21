@@ -16,6 +16,7 @@ class TestCommand: ClassifyCommand {
 
     override func setup(arguments: CommandArguments) {
         super.setup(arguments)
+        loadClassifierDataTask.outputsPresent = true
         testTask.classificationTask = classificationTask
     }
 

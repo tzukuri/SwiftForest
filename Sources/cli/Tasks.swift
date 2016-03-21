@@ -11,7 +11,7 @@ struct LoadDataTaskDelegate {
     var after: (rowSet: RowSet, model: Model) -> Void
 }
 
-struct LoadDataTask {
+class LoadDataTask {
     var delegate: LoadDataTaskDelegate?
 
     // data
@@ -91,7 +91,7 @@ struct TrainingTaskDelegate: ClassifierDelegate {
     }
 }
 
-struct TrainingTask: ClassifierProvider {
+class TrainingTask: ClassifierProvider {
     var delegate: TrainingTaskDelegate?
 
     // data
@@ -108,8 +108,6 @@ struct TrainingTask: ClassifierProvider {
     }
 
     func run() -> Classifier {
-        delegate?.before(task: self)
-
         // load data
         let (rowSet, model) = loadDataTask.run()
         let trainingSet = rowSet as! TrainingSet
@@ -125,6 +123,7 @@ struct TrainingTask: ClassifierProvider {
         )
 
         // train
+        delegate?.before(task: self)
         let start = NSDate()
         classifier.train(trainingSet)
         let duration = start.timeIntervalSinceNow * -1
@@ -134,11 +133,28 @@ struct TrainingTask: ClassifierProvider {
     }
 }
 
-struct LoadClassifierTask: ClassifierProvider {
+struct LoadClassifierTaskDelegate {
+    var before: (task: LoadClassifierTask) -> Void
+    var after: (classifier: Classifier, duration: Double) -> Void
+}
+
+class LoadClassifierTask: ClassifierProvider {
+    var delegate: LoadClassifierTaskDelegate?
     var path: String!
 
+    init(delegate: LoadClassifierTaskDelegate?) {
+        self.delegate = delegate
+    }
+
     func run() -> Classifier {
-        fatalError()
+        delegate?.before(task: self)
+
+        let start = NSDate()
+        let classifier = SerialisedForest.read(path)
+        let duration = start.timeIntervalSinceNow * -1
+
+        delegate?.after(classifier: classifier, duration: duration)
+        return classifier
     }
 }
 
@@ -169,7 +185,7 @@ struct ClassificationTaskDelegate {
     }
 }
 
-struct ClassificationTask {
+class ClassificationTask {
     var delegate: ClassificationTaskDelegate?
 
     // forest/tree
@@ -183,15 +199,14 @@ struct ClassificationTask {
         self.delegate = delegate
     }
 
-    mutating func run() -> [Int] {
-        delegate?.before()
-
+    func run() -> [Int] {
         // run prior tasks
         let classifier = classifierProvider.run()
         let (rows, _) = loadDataTask.run()
         rowSet = rows
         
         // classify
+        delegate?.before()
         delegate?.progressSteps(rows.count)
         let start = NSDate()
         let classifications = rows.map {(row) -> Int in
@@ -211,10 +226,10 @@ struct ClassificationTask {
 // ---------------------------------------
 // testing
 // ---------------------------------------
-struct TestTask {
+class TestTask {
     var classificationTask: ClassificationTask!
 
-    mutating func run() -> Double {
+    func run() -> Double {
         let classifications = classificationTask.run()
         let examples = classificationTask.rowSet as! TrainingSet
         var correct = 0.0

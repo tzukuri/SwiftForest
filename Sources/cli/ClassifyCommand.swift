@@ -12,9 +12,16 @@ class ClassifyCommand: Command {
     }
 
     // classifier
-    var loadClassifierTask = LoadClassifierTask()
     var performTraining = false
     var loadClassifier = false
+    var loadClassifierTask = LoadClassifierTask(delegate: LoadClassifierTaskDelegate(
+        before: { (task) in
+            print("Loading model...")
+        },
+
+        after: {(classifier, duration) in}
+    ))
+    
 
     // classification
     var classificationTask = ClassificationTask(delegate: ClassificationTaskDelegate(
@@ -47,17 +54,17 @@ class ClassifyCommand: Command {
             fatalError("Cannot combine --train and --load options - you can only create or load a classifier")
         }
 
+        // setup classification data
+        loadClassifierDataTask.paths = arguments.requiredCollectedArgument("input_file")
+        classificationTask.loadDataTask = loadClassifierDataTask
+
         // select classifier
         if performTraining {
-            super.setup(arguments) // TrainCommand
+            super.setup(arguments)
             classificationTask.classifierProvider = trainingTask
         } else {
             classificationTask.classifierProvider = loadClassifierTask
         }
-
-        // setup classification data
-        loadClassifierDataTask.paths = arguments.requiredCollectedArgument("input_file")
-        classificationTask.loadDataTask = loadClassifierDataTask
 
         if quietMode {
             loadClassifierDataTask.delegate = nil

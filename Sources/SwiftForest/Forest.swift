@@ -3,7 +3,7 @@ import Foundation
 // ---------------------------------------
 // classification
 // ---------------------------------------
-public class Forest: Classifier {
+public class Forest {
     public var trees: [Tree]
     public var model: Model
     
@@ -12,7 +12,7 @@ public class Forest: Classifier {
         self.trees = trees
     }
 
-    public func distribution(row: Row) -> Distribution {
+    public func distribution(row: Row) -> DistributionType {
         let distribution = Distribution(count: model.numOutputs)
         
         // classify values in each tree and count number of times
@@ -25,10 +25,6 @@ public class Forest: Classifier {
         // weight by total count to form probabilities
         distribution.finalise()
         return distribution
-    }
-
-    public func classify(row: Row) -> Int {
-        return distribution(row).max()
     }
 }
 
