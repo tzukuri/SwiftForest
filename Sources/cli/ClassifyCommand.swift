@@ -69,6 +69,7 @@ class ClassifyCommand: Command {
         if quietMode {
             loadClassifierDataTask.delegate = nil
             classificationTask.delegate = nil
+            loadClassifierTask.delegate = nil
         }
     }
 
